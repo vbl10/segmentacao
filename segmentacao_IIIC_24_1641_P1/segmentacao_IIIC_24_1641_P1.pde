@@ -235,32 +235,41 @@ void draw()
   saida = limearizar(saida, 108);
     
   saida = recortar(saida, 797, 44, 1997, 456, 0xffffff);
-  
+ 
+  PImage segmentada = createImage(imagem.width, imagem.height, RGB);
+  for (int i = imagem.width * imagem.height - 1; i >= 0; i--)
+    segmentada.pixels[i] = (red(saida.pixels[i]) != 0 ? 0 : imagem.pixels[i]);
  
   imprimirResultados(saida);
  
   image(
     imagem,
     0,
-    0 * height / 3,
+    0 * height / 4,
     width,
-    height / 3 - 10
+    height / 4 - 10
   );
   image(
     groundTruth,
     0, 
-    1 * height / 3, 
+    1 * height / 4, 
     width, 
-    height / 3 - 10
+    height / 4 - 10
   );
   image(
     saida,
     0,
-    2 * height / 3,
+    2 * height / 4,
     width, 
-    height / 3 - 10
+    height / 4 - 10
   );
-  
+  image(
+    segmentada,
+    0,
+    3 * height / 4,
+    width, 
+    height / 4 - 10
+  );
   save(caminho + "_Resultado.bmp");
   
 }
