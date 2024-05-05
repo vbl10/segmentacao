@@ -270,6 +270,6 @@ void draw()
     width, 
     height / 4 - 10
   );
-  save(caminho + "_Resultado.bmp");
+  save(caminho + "_Resultado.jpg");
   
 }
