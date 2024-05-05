@@ -1,31 +1,46 @@
 PImage img;
-int limiar = 128; // Limiar para a limiarização
 
 void setup() {
-  size(1218, 124);
-  noLoop();
-
-  img = loadImage("ICC.png");
-  img.loadPixels(); // Carrega os pixels da imagem
-  for (int j = 0; j < img.pixels.length; j++) {
-    int cor = img.pixels[j]; // Obtém a cor do pixel atual
-    // Calcula a média das componentes de cor para obter a escala de cinza
-    int cinza = (int)(red(cor) * 0.39 + green(cor) * 0.59 + blue(cor) * 0.11);
-    // Limiarização
-    if (cinza > limiar) {
-      img.pixels[j] = color(255); // Define o pixel como branco
-    } else {
-      img.pixels[j] = color(0); // Define o pixel como preto
-    }
-  }
-  img.updatePixels(); // Atualiza os pixels da imagem após aplicar as alterações
+  size(1282, 114);
+  img = loadImage("ICC.png"); 
+  img.resize(width, height); 
+  image(img, 0, 0); 
+noLoop(); 
 }
 
 void draw() {
-  image(img, 0, 0); // Exibe a imagem processada
-  imprimirResultados(img); // Chamada da função para imprimir os resultados
-}
+  loadPixels();
 
+  // Filtro Sobel
+  float[][] sobelX = {{-1, 0, 1},
+                      {-2, 0, 2},
+                      {-1, 0, 1}};
+  float[][] sobelY = {{1, 2, 1},
+                      {0, 0, 0},
+                      {-1, -2, -1}};
+
+  for (int x = 1; x < width - 1; x++) {
+    for (int y = 1; y < height - 1; y++) {
+      float sumX = 0;
+      float sumY = 0;
+
+      for (int i = -1; i <= 1; i++) {
+        for (int j = -1; j <= 1; j++) {
+          int idx = (x + i) + (y + j) * width;
+          sumX += brightness(img.pixels[idx]) * sobelX[i + 1][j + 1];
+          sumY += brightness(img.pixels[idx]) * sobelY[i + 1][j + 1];
+        }
+      }
+
+      float magnitude = sqrt(sumX * sumX + sumY * sumY);
+      pixels[x + y * width] = color(255 - magnitude);
+    }
+  }
+
+  updatePixels();
+    imprimirResultados(img);
+    save("ICC_23_L.png");
+}
 void imprimirResultados(PImage img)
 {
   PImage groundTruth = loadImage("IIIC-23-1506-P7_GT1.bmp"); // Carregar a imagem de referência
@@ -59,4 +74,5 @@ void imprimirResultados(PImage img)
     "Falsos Positivos: " + nFalsosPositivos + '\n' +
     "Falsos Negativos: " + nFalsosNegativos + '\n'
   );
+ 
 }
