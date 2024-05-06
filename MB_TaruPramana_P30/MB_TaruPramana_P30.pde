@@ -41,7 +41,7 @@ PImage inverter(PImage img)
 }
 
 
-PImage limearizar(PImage img, int threshold)
+PImage binarizar(PImage img, int threshold)
 {
   PImage aux = createImage(img.width, img.height, RGB);
   for (int i = 0, j = img.width * img.height; i < j; i++)
@@ -182,6 +182,46 @@ PImage filtroSobel(PImage img)
   return aux2;
 }
 
+PImage equalizarHistograma(PImage img)
+{
+  PImage saida = createImage(img.width, img.height, RGB);
+  
+  int[] nk = new int[256];
+  float[] p = new float[256];
+  float[] s = new float[256];
+  int[] ns = new int[256];
+  float somatorio = 0;
+  
+  for (int i = 0; i < 256; i++) {
+    nk[i] = 0;
+  }
+
+  for (int y = 0; y < img.height; y++) {
+    for (int x = 0; x < img.width; x++) {
+      int pos = x + y * img.width;
+      int val = (int)red(img.pixels[pos]);
+      nk[val]++;
+    }
+  }
+
+  for (int i = 0; i < 256; i++) {
+    p[i] = (float)nk[i] / (float)(img.width*img.height);
+    somatorio += p[i];
+    s[i] = somatorio;
+    ns[i] = int(s[i]*255 + 0.5);
+  }
+
+
+  for (int y = 0; y < img.height; y++) {
+    for (int x = 0; x < img.width; x++) {
+      int pos = x + y * img.width;
+      int val = ns[(int)red(img.pixels[pos])];
+      saida.pixels[pos] += color(val);
+    }
+  }
+  
+  return saida;
+}
 
 interface PixelShader { color main(color in); }
 PImage aplicarPixelShader(PImage img, PixelShader ps)
@@ -197,6 +237,17 @@ PImage aplicarPixelShader(PImage img, PixelShader ps)
   }
   
   return aux;
+}
+
+interface OperadorBinario { int main(int a, int b); }
+PImage operacaoBinaria(PImage a, PImage b, OperadorBinario op)
+{
+  PImage saida = createImage(a.width, a.height, RGB);
+  
+  for (int i = a.width * a.height - 1; i >= 0; i--)
+    saida.pixels[i] = color(op.main((int)red(a.pixels[i]), (int)red(b.pixels[i])));
+  
+  return saida;
 }
 
 PImage recortar(PImage img, int x0, int y0, int x1, int y1, color fundo)
@@ -261,22 +312,33 @@ void setup()
 void draw()
 {    
   PImage saida = createImage(imagem.width, imagem.height, RGB);
-
-  saida = escalaDeCinza(imagem, 1, 0, 0);
   
-  saida = filtroSobel(saida);
-  saida = inverter(saida);
-
+  saida = escalaDeCinza(imagem, 1, 1, 1);
+  
+  //melhorar contraste
   saida = aplicarPixelShader(saida, new PixelShader(){
     @Override
     color main(color in)
     {
-      return color(3.4225001 * (float)red(in) - 796.25);
+      return color(4.7712 * (float)red(in) - 382.5);
     }
   });
-  saida = limearizar(saida, 34);
-  saida = filtroGauss(saida);
+  
+  PImage rec1 = recortar(saida, 219, 31, 1605, 299, 0xffffff);
+  PImage rec2 = recortar(saida, 2577, 35, 3726, 363, 0xffffff);
+  saida = operacaoBinaria(rec1, rec2, new OperadorBinario() {
+    @Override
+    int main(int a, int b)
+    {
+      return (a + b) / 2;
+    }
+  });
+  
+  saida = binarizar(saida, 177);
    
+  
+  //RESULTADOS... 
+  
   PImage segmentada = createImage(imagem.width, imagem.height, RGB);
   for (int i = imagem.width * imagem.height - 1; i >= 0; i--)
     segmentada.pixels[i] = (red(saida.pixels[i]) != 0 ? 0 : imagem.pixels[i]);
