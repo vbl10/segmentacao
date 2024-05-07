@@ -1,6 +1,6 @@
-Total:            146148
-Erros:            1961
-Erros (%):        1.3417906
-Falsos Positivos: 0
-Falsos Negativos: 1961
+Total:            131127
+Erros:            5833
+Erros (%):        4.448359
+Falsos Positivos: 4426
+Falsos Negativos: 1407
 
